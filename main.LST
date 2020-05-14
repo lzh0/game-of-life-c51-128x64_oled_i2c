@@ -1,0 +1,436 @@
+C51 COMPILER V9.60.0.0   MAIN                                                              05/14/2020 10:20:20 PAGE 1   
+
+
+C51 COMPILER V9.60.0.0, COMPILATION OF MODULE MAIN
+OBJECT MODULE PLACED IN main.OBJ
+COMPILER INVOKED BY: D:\keil_c51\C51\BIN\C51.EXE main.c LARGE OPTIMIZE(8,SPEED) BROWSE INCDIR(.\SRC) DEBUG OBJECTEXTEND 
+                    -TABS(2)
+
+line level    source
+
+   1          #include <STC15F2K60S2.h>
+   2          #include <stdlib.h>
+   3          #include "oled.h"
+   4          //#include "bmp.h"
+   5          #define High 64
+   6          #define Width 128 //游戏画面尺寸
+   7          
+   8          int cells[High][Width];//全局变量
+   9          
+  10          void show(void);
+  11          void startup(void);
+  12          void updateWithoutInput(void);
+  13          
+  14          int main(void){
+  15   1        OLED_Init();      //初始化OLED  
+  16   1        OLED_Clear(); 
+  17   1        
+  18   1        startup();
+  19   1        while (1)//这是个死循环，所有的细胞动态繁衍或死亡
+  20   1        {
+  21   2            OLED_Clear();
+  22   2            show();
+  23   2            updateWithoutInput();
+  24   2      
+  25   2        }
+  26   1      
+  27   1      
+  28   1        
+  29   1        
+  30   1        
+  31   1      }
+  32          
+  33          
+  34          
+  35          void show(void){
+  36   1        unsigned char i,j,k;
+  37   1        
+  38   1        for(k=0;k<8;k++){
+  39   2          OLED_Set_Pos(0,k);
+  40   2          for(j=0;j<128;j++){
+  41   3            IIC_Start();              //协议格式
+  42   3            Write_IIC_Byte(0x78);     //D/C#=0; R/W#=0
+  43   3            IIC_Wait_Ack(); 
+  44   3            Write_IIC_Byte(0x40);     //write data
+  45   3            IIC_Wait_Ack(); 
+  46   3            OLED_SCLK_Clr();
+  47   3            for(i=0;i<8;i++){
+  48   4              
+  49   4              
+  50   4              
+  51   4              if(cells[j][i]==1){OLED_SDIN_Set();}  //用于始终判断最左边位上的数据，与运算，相同则说明该位为1，设置高
+             -电平（亮），否则设置低电平（灭）
+  52   4              else OLED_SDIN_Clr();
+  53   4              
+C51 COMPILER V9.60.0.0   MAIN                                                              05/14/2020 10:20:20 PAGE 2   
+
+  54   4              
+  55   4              OLED_SCLK_Set();
+  56   4              OLED_SCLK_Clr();
+  57   4              
+  58   4            }
+  59   3      
+  60   3            IIC_Wait_Ack(); 
+  61   3            IIC_Stop();
+  62   3          }
+  63   2        }
+  64   1      
+  65   1      }
+  66          
+  67          
+  68          
+  69          
+  70          
+  71          void startup(void)//数据初始化
+  72          {
+  73   1          int i, j;
+  74   1          for (i = 0; i < High; i++)
+  75   1              for (j = 0; j < Width; j++)
+  76   1              {
+  77   2                  cells[i][j] = rand() % 2;
+  78   2              }
+  79   1      }
+  80          
+  81          
+  82          
+  83          void updateWithoutInput(void)
+  84          {
+  85   1          unsigned char NewCells[High][Width];
+  86   1          int NeibourNumber;
+  87   1          int i, j;
+  88   1          for (i = 1; i <= High - 1; i++)
+  89   1          {
+  90   2              for (j = 0; j < Width; j++)
+  91   2              {
+  92   3                  NeibourNumber = cells[i - 1][j - 1] + cells[i - 1][j] + cells[i - 1][j + 1] + cells[i][j - 1] 
+             -+ cells[i][j + 1] + cells[i + 1][j - 1] + cells[i + 1][j] + cells[i + 1][j + 1];
+  93   3                  if (NeibourNumber == 3)
+  94   3                      NewCells[i][j] = 1;
+  95   3                  else if (NeibourNumber == 2)
+  96   3                      NewCells[i][j] = cells[i][j];
+  97   3                  else
+  98   3                      NewCells[i][j] = 0;
+  99   3              }
+ 100   2          }
+ 101   1          for (i = 1; i <= High - 1; i++)
+ 102   1              for (j = 0; j < Width; j++)
+ 103   1                  cells[i][j] = NewCells[i][j];
+ 104   1      }
+ 105          
+ 106          
+ 107          
+ 108          
+ 109          
+ 110          
+ 111          
+ 112          
+ 113          
+ 114          
+C51 COMPILER V9.60.0.0   MAIN                                                              05/14/2020 10:20:20 PAGE 3   
+
+ 115          
+ 116          
+ 117          
+ 118          
+ 119          
+ 120          
+ 121          
+ 122          
+ 123          
+ 124          
+ 125          
+ 126          
+ 127          
+ 128          
+ 129          
+ 130          
+ 131          
+ 132          
+ 133          
+ 134          
+ 135            /*
+ 136            
+ 137          unsigned int j=0;
+ 138          unsigned char x,y;
+ 139          unsigned char x0,y0,x1,y1;
+ 140            
+ 141            
+ 142          void main(void){
+ 143            OLED_Init();      //初始化OLED  
+ 144            OLED_Clear(); 
+ 145            OLED_Set_Pos(0,0);
+ 146          
+ 147            //OLED_DrawBMP(0,0,128,8,BMP1);
+ 148            
+ 149          
+ 150            for(i=0;i<=16;i++){
+ 151              OLED_WR_Byte(t++,1);
+ 152              //delay_ms(50);
+ 153            }
+ 154            
+ 155            OLED_Set_Pos(0,1);
+ 156            for(i=0;i<=256;i++){
+ 157              OLED_WR_Byte(i,1);
+ 158            } 
+ 159            
+ 160            OLED_Set_Pos(0,2);
+ 161            OLED_WR_Byte(0,1);
+ 162            OLED_WR_Byte(0,1);
+ 163            OLED_WR_Byte(0xff,1);
+ 164          
+ 165            
+ 166            
+ 167            for(t=0;t<=255;t++){
+ 168          
+ 169              
+ 170              
+ 171              //OLED_WR_Byte(t,1);
+ 172              //delay_ms(25);
+ 173              
+ 174              
+ 175              IIC_Start();              //协议格式
+ 176              Write_IIC_Byte(0x78);     //D/C#=0; R/W#=0
+C51 COMPILER V9.60.0.0   MAIN                                                              05/14/2020 10:20:20 PAGE 4   
+
+ 177              IIC_Wait_Ack(); 
+ 178              Write_IIC_Byte(0x40);     //write data
+ 179              IIC_Wait_Ack(); 
+ 180              
+ 181              //Write_IIC_Byte(IIC_Data); //所写数据传入，内容函数为：Write_IIC_Byte(unsigned char IIC_Byte)，以下为Wr
+             -ite_IIC_Byte该函数内容:
+ 182              da=0xff;  //数据传入，复制备份
+ 183              OLED_SCLK_Clr();
+ 184              for(i=0;i<8;i++){
+ 185                
+ 186                //OLED_SDIN_Set();  //用于控制像素点的亮
+ 187                //OLED_SDIN_Clr();  //用于控制像素点的灭
+ 188                
+ 189                m=da;
+ 190                //  OLED_SCLK_Clr();
+ 191                m=m&0x80;
+ 192                if(m==0x80){OLED_SDIN_Set();} //用于始终判断最左边位上的数据，与运算，相同则说明该位为1，设置高电平（亮
+             -），否则设置低电平（灭）
+ 193                else OLED_SDIN_Clr();
+ 194                
+ 195                da=da<<1;  //左移，更新最左侧位上的数据，以用于下次判断，并以此设置亮灭。 
+ 196                
+ 197                OLED_SCLK_Set();
+ 198                OLED_SCLK_Clr();
+ 199                
+ 200              }
+ 201              
+ 202              IIC_Wait_Ack(); 
+ 203              IIC_Stop();
+ 204              
+ 205              
+ 206          }
+ 207              
+ 208            
+ 209              
+ 210          
+ 211            /*
+ 212          
+ 213           
+ 214          //由函数//OLED_ShowCHinese(0,0,0);逆推得到：某汉字的上半部分显示所需语句
+ 215          //以下放于main()函数外
+ 216          unsigned char x=0,y=0;
+ 217          unsigned int t=0;
+ 218          unsigned int i;
+ 219          unsigned char m,da;
+ 220          unsigned char code test[][32]={ //"中",0
+ 221            {0xff,0x00,0xF0,0x10,0x10,0x10,0x10,0xFF,0x10,0x10,0x10,0x10,0xF0,0x00,0x00,0x00},
+ 222            {0x00,0x00,0x0F,0x04,0x04,0x04,0x04,0xFF,0x04,0x04,0x04,0x04,0x0F,0x00,0x00,0x00},
+ 223          };
+ 224          //以上放于main()函数外
+ 225          
+ 226          
+ 227          
+ 228          
+ 229          
+ 230          
+ 231            OLED_Set_Pos(x,y);  //显示汉字的上半部分
+ 232            
+ 233            for(t=0;t<16;t++){
+ 234              //OLED_WR_Byte(test[2*no][t],1);//第二个参数1表示写数据，0为写命令，内容为：Write_IIC_Data(dat);
+ 235              //Write_IIC_Data(dat);  //以下为Write_IIC_Data(dat);的函数内容
+ 236              
+C51 COMPILER V9.60.0.0   MAIN                                                              05/14/2020 10:20:20 PAGE 5   
+
+ 237              IIC_Start();              //协议格式
+ 238              Write_IIC_Byte(0x78);     //D/C#=0; R/W#=0
+ 239              IIC_Wait_Ack(); 
+ 240              Write_IIC_Byte(0x40);     //write data
+ 241              IIC_Wait_Ack(); 
+ 242              
+ 243              //Write_IIC_Byte(IIC_Data); //所写数据传入，内容函数为：Write_IIC_Byte(unsigned char IIC_Byte)，以下为Wr
+             -ite_IIC_Byte该函数内容:
+ 244              da=test[2*no][t]; //数据传入，复制备份
+ 245              OLED_SCLK_Clr();
+ 246              for(i=0;i<8;i++){
+ 247                m=da;
+ 248                //  OLED_SCLK_Clr();
+ 249                m=m&0x80;
+ 250                if(m==0x80){OLED_SDIN_Set();}
+ 251                else OLED_SDIN_Clr();
+ 252                da=da<<1;
+ 253                OLED_SCLK_Set();
+ 254                OLED_SCLK_Clr();
+ 255              }
+ 256              
+ 257              
+ 258              
+ 259              
+ 260              IIC_Wait_Ack(); 
+ 261              IIC_Stop();
+ 262          
+ 263            } 
+ 264            //--------------------------------------------------------------------------
+ 265            OLED_Set_Pos(x,y+1);  //显示汉字的下半部分
+ 266            for(t=0;t<16;t++)
+ 267            { 
+ 268              OLED_WR_Byte(test[2*no+1][t],1);
+ 269            }
+ 270          
+ 271            while(1){}
+ 272            
+ 273          }
+ 274          
+ 275          */
+ 276          
+ 277          
+ 278          
+ 279          
+ 280          
+ 281          
+ 282          
+ 283          
+ 284          
+ 285          
+ 286          
+ 287          
+ 288          
+ 289          
+ 290          
+ 291          
+ 292          
+ 293          
+ 294          
+ 295          
+ 296          /*
+ 297           int main(void)
+C51 COMPILER V9.60.0.0   MAIN                                                              05/14/2020 10:20:20 PAGE 6   
+
+ 298           {
+ 299              OLED_Init();      //初始化OLED  
+ 300              OLED_Clear(); OLED_ShowCHinese(0,0,0);//中
+ 301              //Delay_1ms(1000);
+ 302             
+ 303          
+ 304             OLED_Init();     //初始化OLED  
+ 305              OLED_Clear(); 
+ 306              x=64;y=4;
+ 307              OLED_Set_Pos(x,y);
+ 308              for(t=0;t<16;t++)
+ 309              {
+ 310                //OLED_WR_Byte(test[2*no][t],1);//1为写数据，0为写命令
+ 311                //Write_IIC_Data(test[2*no][t]);
+ 312                //Write_IIC_Byte(test[2*no][t]);
+ 313                
+ 314                IIC_Start();
+ 315                Write_IIC_Byte(0x78);     //D/C#=0; R/W#=0
+ 316                IIC_Wait_Ack();
+ 317                Write_IIC_Byte(0x40);     //write data
+ 318                IIC_Wait_Ack();
+ 319                
+ 320                da=(test[2*no][t]);
+ 321                OLED_SCL=0;
+ 322                for(i=0;i<8;i++)
+ 323                {
+ 324                  m=da;
+ 325                  //  OLED_SCL=0;
+ 326                  m=m&0x80;
+ 327                  if(m==0x80){OLED_SDIN=1;}
+ 328                  else OLED_SDIN=0;
+ 329                  da=da<<1;
+ 330                  OLED_SCL=1;
+ 331                  OLED_SCL=0;
+ 332                }
+ 333                IIC_Wait_Ack();
+ 334                IIC_Stop();
+ 335                
+ 336                  //adder+=1;
+ 337               }
+ 338              //汉字下半部分显示所需语句
+ 339              OLED_Set_Pos(x,y+1);
+ 340              for(t=0;t<16;t++)
+ 341                {
+ 342                  OLED_WR_Byte(test[2*no+1][t],OLED_DATA);
+ 343                  adder+=1;
+ 344                }
+ 345             
+ 346          
+ 347          
+ 348            //由函数//OLED_DrawBMP(0,0,128,8,BMP1);逆推得到
+ 349            x0=y0=0;  //起点位置
+ 350            x1=128;y1=64; //屏幕大小128*64
+ 351            
+ 352            if(y1%8==0) y=y1/8;
+ 353            else y=y1/8+1;
+ 354            for(y=y0;y<y1;y++)
+ 355            {
+ 356              OLED_Set_Pos(x0,y);
+ 357              if(j>0xfd){j=0;}
+ 358              for(x=x0;x<x1;x++){
+ 359                
+C51 COMPILER V9.60.0.0   MAIN                                                              05/14/2020 10:20:20 PAGE 7   
+
+ 360              //OLED_WR_Byte(BMP[j++],OLED_DATA);
+ 361              //OLED_WR_Byte(unsigned dat,1);
+ 362              //Write_IIC_Data(dat);
+ 363              IIC_Start();
+ 364              Write_IIC_Byte(0x78);     //D/C#=0; R/W#=0
+ 365              IIC_Wait_Ack();
+ 366              Write_IIC_Byte(0x40);     //write data
+ 367              IIC_Wait_Ack();
+ 368                
+ 369              //Write_IIC_Byte(IIC_Data);
+ 370              unsigned char i;
+ 371              unsigned char m,da;
+ 372              da=IIC_Byte;
+ 373              OLED_SCL=0;
+ 374              for(i=0;i<8;i++)
+ 375              {
+ 376                m=da;
+ 377                //  OLED_SCL=0;
+ 378                m=m&0x80;
+ 379                
+ 380                if(m==0x80){OLED_SDIN=1;}
+ 381                else OLED_SDIN=0;
+ 382                
+ 383                da=da<<1;
+ 384                OLED_SCL=1;
+ 385                OLED_SCL=0;
+ 386              }
+ 387                
+ 388              IIC_Wait_Ack();
+ 389              IIC_Stop();
+ 390                
+ 391                
+ 392              }
+ 393            }
+ 394          }
+ 395            */
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =   1035    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =  16384    8202
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)
