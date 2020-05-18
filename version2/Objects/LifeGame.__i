@@ -1,0 +1,1 @@
+"Lib\lifegame\LifeGame.c" OPTIMIZE (8,SPEED) BROWSE DEBUG OBJECTEXTEND PRINT(.\Listings\LifeGame.lst) TABS (2) OBJECT(.\Objects\LifeGame.obj)

@@ -1,0 +1,64 @@
+C51 COMPILER V9.60.0.0   LIFEGAME                                                          05/18/2020 17:07:48 PAGE 1   
+
+
+C51 COMPILER V9.60.0.0, COMPILATION OF MODULE LIFEGAME
+OBJECT MODULE PLACED IN .\Objects\LifeGame.obj
+COMPILER INVOKED BY: D:\keil_c51\C51\BIN\C51.EXE Lib\lifegame\LifeGame.c OPTIMIZE(8,SPEED) BROWSE DEBUG OBJECTEXTEND PRI
+                    -NT(.\Listings\LifeGame.lst) TABS(2) OBJECT(.\Objects\LifeGame.obj)
+
+line level    source
+
+   1          #include "lifegame.h"
+*** ERROR C141 IN LINE 28 OF Lib\lifegame\lifegame.h: syntax error near 'rate', expected ')'
+   2          /*  Defines  */
+   3          
+   4          enum MODE {
+   5              TITLE_MODE,
+   6              GAME_MODE
+   7          };
+   8          
+   9          /*  Typedefs  */
+  10          
+  11          typedef struct {
+  12              void (*initFunc)(void);
+  13              bool (*updateFunc)(void);
+*** ERROR C141 IN LINE 13 OF Lib\lifegame\LifeGame.c: syntax error near 'bool', expected 'bit'
+*** ERROR C141 IN LINE 13 OF Lib\lifegame\LifeGame.c: syntax error near '*', expected 'bit'
+  14              void (*drawFunc)(void);
+  15          } MODULE_FUNCS;
+*** ERROR C141 IN LINE 15 OF Lib\lifegame\LifeGame.c: syntax error near '}', expected 'hdata'
+  16          
+  17          /*  Global Variables  */
+  18          
+  19          /*  Local Variables  */
+  20          
+  21          static const MODULE_FUNCS moduleTable[] = {
+*** ERROR C129 IN LINE 21 OF Lib\lifegame\LifeGame.c: missing ';' before 'moduleTable'
+  22              { initTitle, updateTitle, drawTitle },
+  23              { initGame,  updateGame,  drawGame },
+  24          };
+  25          
+  26          static enum MODE mode = TITLE_MODE;
+  27          bool isDone;
+  28          
+  29          
+  30          void LifeGame(void)
+  31          {
+  32            SetFrameRate(60);
+  33            moduleTable[TITLE_MODE].initFunc();
+  34            while(1)
+  35            {
+  36            if (!(NextFrame())) return;
+  37            bool isDone = moduleTable[mode].updateFunc();
+  38            moduleTable[mode].drawFunc();
+  39          
+  40            OLED_Refresh_Gram();//¸üÐÂOLEDÏÔ´æ
+  41            if (isDone) {
+  42              mode = (mode == TITLE_MODE) ? GAME_MODE : TITLE_MODE;
+  43              moduleTable[mode].initFunc();
+  44            }
+  45            } 
+  46          }
+  47          
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  5 ERROR(S)

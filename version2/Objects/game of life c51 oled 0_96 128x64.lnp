@@ -1,0 +1,5 @@
+".\Objects\STARTUP.obj",
+".\Objects\main.obj",
+".\Objects\oled.obj" 
+TO ".\Objects\game of life c51 oled 0_96 128x64" 
+PRINT(".\Listings\game of life c51 oled 0_96 128x64.m51") RAMSIZE(256) 

@@ -1,0 +1,257 @@
+C51 COMPILER V9.60.0.0   GAMECONTROL                                                       05/18/2020 17:07:47 PAGE 1   
+
+
+C51 COMPILER V9.60.0.0, COMPILATION OF MODULE GAMECONTROL
+OBJECT MODULE PLACED IN .\Objects\GameControl.obj
+COMPILER INVOKED BY: D:\keil_c51\C51\BIN\C51.EXE Lib\lifegame\GameControl.c OPTIMIZE(8,SPEED) BROWSE DEBUG OBJECTEXTEND 
+                    -PRINT(.\Listings\GameControl.lst) TABS(2) OBJECT(.\Objects\GameControl.obj)
+
+line level    source
+
+   1          #include "lifegame.h"
+*** ERROR C141 IN LINE 28 OF Lib\lifegame\lifegame.h: syntax error near 'rate', expected ')'
+   2          
+   3          
+   4          u8 Display_Temp[LIFEGAME_WIDTH][LIFEGAME_HEIGHT];
+*** ERROR C129 IN LINE 4 OF Lib\lifegame\GameControl.c: missing ';' before 'Display_Temp'
+   5          
+   6            uint8_t frameRate;
+   7            uint16_t frameCount;
+   8            uint8_t eachFrameMillis;
+   9            long lastFrameStart;
+  10            long nextFrameStart;
+  11            bool post_render;
+  12            uint8_t lastFrameDurationMs;
+  13            static bool   toDraw;
+  14            uint16_t Counter;
+  15          
+  16          /*  Defines  */
+  17          /* Frame management */
+  18          void SetFrameRate(uint8_t rate)
+  19          {
+  20            frameRate = rate;
+  21            eachFrameMillis = 1000/rate;
+  22          }
+  23          static bool nextFrame(void)
+  24          {
+  25            long now = HAL_GetTick();//当前毫秒数
+  26            //uint8_t remaining;
+  27          
+  28            // post render
+  29            if (post_render) {
+  30              lastFrameDurationMs = now - lastFrameStart;
+  31              frameCount++;
+  32              post_render = false;
+  33            }
+  34          
+  35            // if it's not time for the next frame yet
+  36            if (now < nextFrameStart) {
+  37              //remaining = nextFrameStart - now;
+  38          
+  39              return false;
+  40            }
+  41          
+  42            nextFrameStart = now + eachFrameMillis;
+  43            lastFrameStart = now;
+  44            post_render = true;
+  45            return post_render;
+  46          }
+  47          
+  48          bool NextFrame(void)
+  49          {
+  50              bool ret = nextFrame();
+  51              if (ret) {
+  52                KeyScan();
+C51 COMPILER V9.60.0.0   GAMECONTROL                                                       05/18/2020 17:07:47 PAGE 2   
+
+  53              }
+  54              return ret;
+  55          }
+  56          int NeighborCount( int x, int y)//判断当前细胞周围存活个数
+  57          {
+  58              int i;       
+  59              int j;       
+  60              int count = 0;
+  61            if ( x >= (LIFEGAME_WIDTH-1)||y >= (LIFEGAME_HEIGHT-1)||x <=0||y <=0)//边界处理
+  62            {
+  63            return 0xff;
+  64            }
+  65              for (i = x-1; i <= x+1; i++)
+  66              {
+  67                    for (j = y-1; j <= y+1; j++)
+  68                        if (OLED_GetPixel(i,j) == ALIVE)
+  69                        {
+  70                            count++;
+  71                        }
+  72              }
+  73            if (OLED_GetPixel(x,y) == ALIVE)
+  74              count --;
+  75          
+  76              return count;
+  77          }
+  78          void UpDate(void)
+  79          {
+  80            int i,j;
+  81            for(i=0;i<LIFEGAME_WIDTH;i++)
+  82            {
+  83              for(j=0;j<LIFEGAME_HEIGHT;j++)
+  84              {
+  85                if(Display_Temp[i][j]==ALIVE)
+  86                {
+  87                OLED_DrawPixel(i,j,ALIVE);
+  88                }
+  89                else
+  90                {
+  91                OLED_DrawPixel(i,j,DEAD);
+  92                }
+  93              }
+  94            }
+  95          }
+  96          
+  97          void initGame(void)
+  98          {
+  99            int i,j;
+ 100            Counter=0;
+ 101            for(i=0;i<LIFEGAME_WIDTH;i++)
+ 102            {
+ 103              for(j=0;j<LIFEGAME_HEIGHT;j++)
+ 104              {
+ 105              Display_Temp[i][j]=0;
+ 106              }
+ 107            }
+ 108          }
+ 109          
+ 110          bool updateGame(void)
+ 111          {
+ 112          int i,j,ret;
+ 113            Counter++;
+ 114            if(Counter>=5)//12
+C51 COMPILER V9.60.0.0   GAMECONTROL                                                       05/18/2020 17:07:47 PAGE 3   
+
+ 115            {
+ 116              Counter=0;
+ 117              toDraw=true;    
+ 118              for(i=0;i<LIFEGAME_WIDTH;i++)
+ 119              {
+ 120              for(j=0;j<LIFEGAME_HEIGHT;j++)
+ 121              {
+ 122                if (OLED_GetPixel(i,j) == ALIVE)
+ 123                {
+ 124                  switch(NeighborCount(i,j))
+ 125                  {
+ 126                   case 0:
+ 127                     Display_Temp[i][j]=DEAD;
+ 128                   break;
+ 129                   
+ 130                   case 1:
+ 131                     Display_Temp[i][j]=DEAD;
+ 132                   break;
+ 133                    
+ 134                   case 2:
+ 135                     Display_Temp[i][j]=ALIVE;
+ 136                   break;
+ 137                      
+ 138                   case 3:
+ 139                     Display_Temp[i][j]=ALIVE;
+ 140                   break;
+ 141                      
+ 142                   case 4:
+ 143                      Display_Temp[i][j]=DEAD;
+ 144                   break;
+ 145                   
+ 146                   case 5:
+ 147                      Display_Temp[i][j]=DEAD;
+ 148                   break;
+ 149                   
+ 150                   case 6:
+ 151                      Display_Temp[i][j]=DEAD;
+ 152                   break;
+ 153                   
+ 154                   case 7:
+ 155                      Display_Temp[i][j]=DEAD;
+ 156                   break;
+ 157                   
+ 158                   case 8:
+ 159                      Display_Temp[i][j]=DEAD;
+ 160                   break;
+ 161                   
+ 162                   default:
+ 163                    Display_Temp[i][j]=DEAD; 
+ 164                   break;
+ 165                   
+ 166                  }
+ 167                }
+ 168                else
+ 169                {
+ 170                  switch(NeighborCount(i,j))
+ 171                  {
+ 172                   case 0:
+ 173                     Display_Temp[i][j]=DEAD;
+ 174                   break;
+ 175                   
+ 176                   case 1:
+C51 COMPILER V9.60.0.0   GAMECONTROL                                                       05/18/2020 17:07:47 PAGE 4   
+
+ 177                     Display_Temp[i][j]=DEAD;
+ 178                   break;
+ 179                    
+ 180                   case 2:
+ 181                     Display_Temp[i][j]=DEAD;
+ 182                   break;
+ 183                      
+ 184                   case 3:
+ 185                     Display_Temp[i][j]=ALIVE;
+ 186                   break;
+ 187                      
+ 188                   case 4:
+ 189                      Display_Temp[i][j]=DEAD;
+ 190                   break;
+ 191                   
+ 192                   case 5:
+ 193                      Display_Temp[i][j]=DEAD;
+ 194                   break;
+ 195                   
+ 196                   case 6:
+ 197                      Display_Temp[i][j]=DEAD;
+ 198                   break;
+ 199                   
+ 200                   case 7:
+ 201                      Display_Temp[i][j]=DEAD;
+ 202                   break;
+ 203                   
+ 204                   case 8:
+ 205                      Display_Temp[i][j]=DEAD;
+ 206                   break;
+ 207                   
+ 208                   default:
+ 209                     Display_Temp[i][j]=DEAD; 
+ 210                   break;
+ 211                  }
+ 212                }
+ 213              }
+ 214            
+ 215              }
+ 216            }
+ 217            if(ButtonDown(B_BUTTON))
+ 218            {
+ 219              ret=true;
+ 220            }
+ 221            else
+ 222            {
+ 223              ret=false;  
+ 224            } 
+ 225          return ret;
+ 226          }
+ 227          
+ 228          void drawGame(void)
+ 229          {
+ 230            if(toDraw)
+ 231            {
+ 232            UpDate();
+ 233            toDraw=false;
+ 234            }
+ 235          }
+ 236          
+ 237          
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  2 ERROR(S)
