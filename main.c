@@ -2,12 +2,12 @@
 #include <stdlib.h>
 #include "oled.h"
 //#include "bmp.h"
-#define Width 3 //128   //游戏画面尺寸
-#define High 3	//64
+#define Width 11 //128   //游戏画面尺寸，11是极限值
+#define High 	11//64	//由于updateWithoutInput函数中新建了一个同等大小的数组，导致占用大量空间，无法再增加了。除非优化该函数
 
 
-char cells[Width][High];//全局变量0,0,0,0,1,1,1,1,2
-//char cell[Width+9][High+9]={0};
+char cells[Width][High]={0};//全局变量0,0,0,0,1,1,1,1,2
+//char cell[16][16]={0};//16*16的数组貌似太大了....得简化下程序大小
 char array_checkout_flag=0;//数组高度检查标志位
 
 void show(unsigned char begin_x,unsigned char begin_y);
@@ -15,62 +15,74 @@ void startup(void);
 void updateWithoutInput(void);
 void change_array(void);
 char checkout_array_high(unsigned char high);
+void print_test(void);
 
 
 int main(void){
-	unsigned char z;
+	//unsigned int i,z=1;
 
 
 	array_checkout_flag=checkout_array_high(High);	//标志位检查并赋检查返回值
 	
 	OLED_Init();			//初始化OLED  
+	//OLED_Display_On();
 	OLED_Clear(); 
-	change_array();
+	//change_array();
+	//show(0,0);//delay_ms(100);
 	
+	startup();
+	while (1)//这是个死循环，所有的细胞动态繁衍或死亡
+	{
+		
+		 //print_test();
+		show(0,0);
+		delay_ms(10);
+			//OLED_Clear();
+		//
+		//OLED_Clear(); 
+		
+		
+			updateWithoutInput();
+
+	}
+}
+
+
+void print_test(void){
+	unsigned char i,z;
+	OLED_Clear();
 	
+	OLED_Set_Pos(0,7);
 	
-	show(0,0);//delay_ms(100);
-	
-	
-	
-	//	------------像素扫描方向测试
-			OLED_Set_Pos(Width,0);
+		for(z=0;z<120;z++){
+			//OLED_Set_Pos(z,0);
+			//------------像素扫描方向测试
+			//OLED_Set_Pos(z,0);
+			
 			IIC_Start();							//协议格式
 			Write_IIC_Byte(0x78);			//D/C#=0; R/W#=0
 			IIC_Wait_Ack();	
 			Write_IIC_Byte(0x40);			//write data
 			IIC_Wait_Ack();	
-			OLED_SCLK_Clr();
 			
-			for(z=0;z<8;z++){OLED_SDIN_Set();OLED_SCLK_Set();OLED_SCLK_Clr();}
+			OLED_SCLK_Clr();
+			for(i=0;i<8;i++){
+				OLED_SDIN_Set();
+				OLED_SCLK_Set();
+				OLED_SCLK_Clr();
+			}
+			
 			IIC_Wait_Ack();	
 			IIC_Stop();	
-
 //---------------------------------------------------
-	
-	//startup();
-	while (1)//这是个死循环，所有的细胞动态繁衍或死亡
-	{
-		
-		//show(0,0);delay_ms(100);
-		
-		//OLED_Set_Pos(0,3);
-		Write_IIC_Byte(0Xff);
-		delay_ms(100);
-			OLED_Clear();
-		//
-		//OLED_Clear(); 
-		
-		
-			//updateWithoutInput();
-
-	}
-
-
-	
-	
+			
+			//Write_IIC_Data(0Xff);
+			delay_ms(1);
+		}
 	
 }
+
+
 
 void change_array(void){
 	int i,j;
@@ -105,8 +117,7 @@ char checkout_array_high(unsigned char high){
 
 void show(unsigned char begin_x,unsigned char begin_y){
 	int i,j,k;
-	
-	
+
 	for(k=0;k<(High/8+array_checkout_flag);k++){	//如果是8的整数倍，则不用管；如果不是8的整数倍情况，得多向下扫描一行，以处理余数部分
 		
 		OLED_Set_Pos(begin_x,begin_y+k);
@@ -122,8 +133,6 @@ void show(unsigned char begin_x,unsigned char begin_y){
 			
 			for(i=0;i<8;i++){	//由于排线在下的状态下，每列像素的扫描方向为从下到上，所以作此修改
 			
-				/*OLED_SDIN_Set();*/
-				
 				if((k*8+7-i)<(High)){	//用于避免越界	//当k=0,i=0时所得值，会与当k=1,i=7时所得值相同，即存在重复打印
 					if(cells[j][k*8+7-i]==0){OLED_SDIN_Set();}	//用于始终判断最左边位上的数据，与运算，相同则说明该位为1，设置高电平（亮），否则设置低电平（灭）
 					else OLED_SDIN_Clr();
@@ -142,7 +151,6 @@ void show(unsigned char begin_x,unsigned char begin_y){
 			
 		}
 	}
-
 }
 
 
